@@ -1,28 +1,99 @@
 #!/usr/bin/env node
 
-import { Exam, searchExam } from "."
+import { Exam, searchExam } from '.'
 import chalk from 'chalk'
 
-function printExam(exam: Exam) {
-  console.log(chalk.cyan(`${exam.courseCode} ${exam.name} (Modul: ${exam.cmCode})`))
-  console.log(chalk.yellow(`Start: ${exam.start}`))
-  console.log(chalk.yellow(`Duration: ${exam.duration} hours`))
-  console.log(chalk.yellow(`Location: ${exam.location}`))
-  console.log(chalk.yellow(`Registration: ${exam.registrationStart} - ${exam.registrationEnd}`))
+/**
+ * Format a date using the locale including both the date and time.
+ * @param date The date to format.
+ * @returns The formatted date and time.
+ */
+function formatDateAndTime(date: Date) {
+    return date.toLocaleString(undefined, {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'long',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+    })
 }
 
-;(async function main() {
-  const query = process.argv[2]
-  if (query === undefined) {
-	  console.error("Usage: cthexam <query>")
-	  process.exit(1)
-  }
+/**
+ * Format a date using the locale including only the date.
+ * @param date The date to format.
+ * @returns The formatted date.
+ */
+function formatDate(date: Date) {
+    return date.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+    })
+}
 
-  const exams = await searchExam(query)
-  if (exams.length === 0) {
-    console.log(chalk.yellow("No exams found"))
-    process.exit(0)
-  }
+/**
+ * Create a terminal hyperlink.
+ * @param url The URL the link leads to.
+ * @param text The text shown for the link.
+ * @returns The terminal compatible hyperlink.
+ */
+function link(url: string, text: string): string {
+    return `\x1b]8;;${url}\x1b\\${text}\x1b]8;;\x1b\\`
+}
 
-  exams.forEach(printExam)
+/**
+ * Get the URL to a course page.
+ * @param courseCode The course to get the URL for.
+ * @returns The URL to the course page.
+ */
+function getCourseUrl(courseCode: string): string {
+    const base =
+        'https://www.chalmers.se/utbildning/dina-studier/hitta-kurs-och-programplaner/kursplaner/'
+    return base + courseCode
+}
+
+/**
+ * Pretty print exam information.
+ * @param exam The exam to print.
+ */
+function printExam(exam: Exam) {
+    const start = formatDateAndTime(exam.start)
+    const registrationStart = formatDate(exam.registrationStart)
+    const registrationEnd = formatDate(exam.registrationEnd)
+    const url = getCourseUrl(exam.courseCode)
+
+    const label = chalk.gray
+
+    console.log(
+        chalk.cyan.bold(link(url, `${exam.courseCode} ${exam.name}`)) +
+            chalk.gray(` Modul: ${exam.cmCode}`)
+    )
+    console.log(label('Start:    ') + chalk.green(start))
+    console.log(label('Duration: ') + chalk.magenta(`${exam.duration} hours`))
+    console.log(label('Location: ') + chalk.blue(exam.location))
+    console.log(
+        label('Register: ') +
+            chalk.yellow(`${registrationStart} → ${registrationEnd}`)
+    )
+}
+
+void (async function main() {
+    const query = process.argv[2]
+    if (query === undefined) {
+        console.error('Usage: cthexam <query>')
+        process.exit(1)
+    }
+
+    const exams = await searchExam(query)
+    if (exams.length === 0) {
+        console.log(chalk.yellow('No exams found'))
+        process.exit(0)
+    }
+
+    exams.forEach((exam, i) => {
+        if (i === 0) console.log()
+        printExam(exam)
+        console.log()
+    })
 })()
