@@ -75,23 +75,21 @@ function parseDateSweden(date: string, time?: string): Date {
         time !== undefined ? time + ':00' : (dateSplit[1] ?? '00:00:00')
     const iso = `${datePart}T${timePart}`
 
-    const parts = new Intl.DateTimeFormat('sv-SE', {
-        timeZone: 'Europe/Stockholm',
-        hour12: false,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-    }).formatToParts(new Date(iso))
+    const swedenOffset =
+        new Date(
+            new Intl.DateTimeFormat('sv-SE', {
+                timeZone: 'Europe/Stockholm',
+                hour12: false,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+            }).format(new Date(iso))
+        ).getTime() - new Date(iso).getTime()
 
-    const get = (t: string) => parts.find(p => p.type === t)!.value
-
-    return new Date(
-        `${get('year')}-${get('month')}-${get('day')}T` +
-            `${get('hour')}:${get('minute')}:${get('second')}`
-    )
+    return new Date(new Date(iso).getTime() - swedenOffset)
 }
 
 /**
