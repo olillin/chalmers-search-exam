@@ -15,11 +15,11 @@ See the example below:
 import { searchExam, Exam } from 'chalmers-search-exam'
 
 async function printExamStart(courseCode: string) {
-	const exams: Exam[] = await searchExam(courseCode)
-	console.log(exams[0].start)
+    const exams: Exam[] = await searchExam(courseCode)
+    console.log(exams[0].start)
 }
 
-printExamStart("TDA553") // Output: 2026-03-19T13:00:00.000Z
+printExamStart('TDA553') // Output: 2026-03-19T13:00:00.000Z
 ```
 
 ## CLI
@@ -90,4 +90,3 @@ Add the package to `configuration.nix`:
 ```
 
 Rebuild your system, you can now use the `cthexam` command.
-

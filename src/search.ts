@@ -63,21 +63,35 @@ interface RawExamDateChange {
 }
 
 /**
- * Parse a date string, optionally with a time of day.
+ * Parse a date string with the Swedish time zone, optionally with a time of day.
  * @param date The date in ISO format.
  * @param time The time as HH:MM.
  * @returns The date at the time provided.
  */
-function parseDate(date: string, time?: string): Date {
-    const result = new Date(date)
-    if (time) {
-        const [hours, minutes] = time.split(':').map(x => parseInt(x))
-        result.setHours(hours)
-        result.setMinutes(minutes)
-        result.setSeconds(0)
-        result.setMilliseconds(0)
-    }
-    return result
+function parseDateSweden(date: string, time?: string): Date {
+    const dateSplit = date.split('T')
+    const datePart = dateSplit[0]
+    const timePart =
+        time !== undefined ? time + ':00' : (dateSplit[1] ?? '00:00:00')
+    const iso = `${datePart}T${timePart}`
+
+    const parts = new Intl.DateTimeFormat('sv-SE', {
+        timeZone: 'Europe/Stockholm',
+        hour12: false,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+    }).formatToParts(new Date(iso))
+
+    const get = (t: string) => parts.find(p => p.type === t)!.value
+
+    return new Date(
+        `${get('year')}-${get('month')}-${get('day')}T` +
+            `${get('hour')}:${get('minute')}:${get('second')}`
+    )
 }
 
 /**
@@ -88,9 +102,9 @@ function parseDate(date: string, time?: string): Date {
 function parseExamDateChange(change: RawExamDateChange): ExamDateChange {
     return {
         changeId: change.changeId,
-        oldValue: parseDate(change.oldValue),
-        newValue: parseDate(change.newValue),
-        decisionDate: parseDate(change.decisionDate),
+        oldValue: parseDateSweden(change.oldValue),
+        newValue: parseDateSweden(change.newValue),
+        decisionDate: parseDateSweden(change.decisionDate),
         pressInfo: change.pressInfo,
         signedBy: change.signedBy,
     }
@@ -104,7 +118,7 @@ const ONE_HOUR_MS = 60 * 60 * 1000
  * @returns The parsed exam.
  */
 function parseExam(exam: RawExam): Exam {
-    const start = parseDate(exam.exDate, exam.starts)
+    const start = parseDateSweden(exam.exDate, exam.starts)
     const durationMs = exam.exLenght * ONE_HOUR_MS
     const end = new Date(start.getTime() + durationMs)
 
@@ -120,13 +134,13 @@ function parseExam(exam: RawExam): Exam {
         isDigital: !!exam.digitalDecided,
         isCancelled: exam.isCancelled,
 
-        registrationStart: parseDate(exam.exDateRegStart),
-        registrationEnd: parseDate(exam.exDateLastReg),
+        registrationStart: parseDateSweden(exam.exDateRegStart),
+        registrationEnd: parseDateSweden(exam.exDateLastReg),
 
         courseCode: exam.code,
         courseId: exam.courseId,
 
-        updated: parseDate(exam.updated),
+        updated: parseDateSweden(exam.updated),
         dateChanges: exam.pewExamDateChanges.map(parseExamDateChange),
 
         inst: exam.inst,
@@ -201,4 +215,15 @@ export async function searchExam(query: string): Promise<Exam[]> {
         exactMatches.length > 0 ? exactMatches : responseData.results
 
     return rawExams.map(parseExam)
+}
+
+export const exportedForTesting = {
+    parseExam,
+    parseExamDateChange,
+    parseDateSweden,
+}
+export type exportedTypesForTesting = {
+    ExamSearchResponse: ExamSearchResponse
+    RawExam: RawExam
+    RawExamDateChange: RawExamDateChange
 }
