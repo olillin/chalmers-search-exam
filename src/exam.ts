@@ -53,4 +53,3 @@ export interface ExamDateChange {
     pressInfo: string
     signedBy: string
 }
-

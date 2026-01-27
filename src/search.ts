@@ -1,4 +1,4 @@
-import { Exam, ExamDateChange, ExamLocation } from "./exam"
+import { Exam, ExamDateChange, ExamLocation } from './exam'
 
 interface ExamSearchResponse {
     info: {
@@ -202,4 +202,3 @@ export async function searchExam(query: string): Promise<Exam[]> {
 
     return rawExams.map(parseExam)
 }
-
