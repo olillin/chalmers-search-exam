@@ -30,7 +30,10 @@
         "url": "git+https://github.com/olillin/chalmers-search-exam.git"
     },
     "keywords": [
-        "chalmers"
+        "chalmers",
+        "exam",
+        "cli",
+        "library"
     ],
     "author": "Oli<oli@olillin.com>",
     "license": "MIT",
