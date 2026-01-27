@@ -46,12 +46,12 @@ describe('parseExam', () => {
         const result = parseExam(rawExam)
         const expected: Exam = {
             name: 'Objektorienterad programmering och design',
-            updated: new Date('2026-01-27T12:00:00+01:00'),
+            updated: new Date('2026-01-27T11:00:00.000Z'),
             location: 'Johanneberg',
-            registrationStart: new Date('2025-12-29T00:00:00'),
-            registrationEnd: new Date('2026-03-01T00:00:00'),
-            start: new Date('2026-03-19T14:00:00'),
-            end: new Date('2026-03-19T18:00:00'),
+            registrationStart: new Date('2025-12-28T23:00:00.000Z'),
+            registrationEnd: new Date('2026-02-28T23:00:00.000Z'),
+            start: new Date('2026-03-19T13:00:00.000Z'),
+            end: new Date('2026-03-19T17:00:00.000Z'),
             duration: 4,
             courseCode: 'TDA553',
             isCancelled: false,
@@ -73,9 +73,9 @@ describe('parseExamDateChange', () => {
         const result = parseExamDateChange(rawExamDateChange)
         const expected: ExamDateChange = {
             changeId: 25502,
-            oldValue: new Date('2026-03-16T00:00:00'),
-            newValue: new Date('2026-03-20T00:00:00'),
-            decisionDate: new Date('2025-12-04T00:00:00'),
+            oldValue: new Date('2026-03-15T23:00:00.000Z'),
+            newValue: new Date('2026-03-19T23:00:00.000Z'),
+            decisionDate: new Date('2025-12-03T23:00:00.000Z'),
             pressInfo: '[2026-03-16 4,5 hp, 0217]',
             signedBy: 'Examinator',
         }
@@ -120,6 +120,14 @@ describe('parseDateSweden', () => {
     it('handles DST end', () => {
         const result = parseDateSweden('2026-03-29T00:00:00').toISOString()
         const expected = '2026-03-28T23:00:00.000Z'
+        expect(result).toStrictEqual(expected)
+    })
+
+    it('ignores explicit offsets', () => {
+        const result = parseDateSweden(
+            '2026-01-27T12:00:00.0000000+02:00'
+        ).toISOString()
+        const expected = '2026-01-27T11:00:00.000Z'
         expect(result).toStrictEqual(expected)
     })
 })

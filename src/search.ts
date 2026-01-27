@@ -69,7 +69,7 @@ interface RawExamDateChange {
  * @returns The date at the time provided.
  */
 function parseDateSweden(date: string, time?: string): Date {
-    const dateSplit = date.split('T')
+    const dateSplit = date.split(/[T+]/g)
     const datePart = dateSplit[0]
     const timePart =
         time !== undefined ? time + ':00' : (dateSplit[1] ?? '00:00:00')
