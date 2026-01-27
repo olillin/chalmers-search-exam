@@ -15,6 +15,9 @@
             "default": "./lib/index.js"
         }
     },
+    "bin": {
+        "cthexam": "./lib/cli.js"
+    },
     "scripts": {
         "build": "rimraf lib && tsc",
         "test": "jest",
