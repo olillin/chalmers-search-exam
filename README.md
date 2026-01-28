@@ -1,7 +1,7 @@
 # Chalmers Search Exam
 
-![GitHub test status](https://img.shields.io/github/check-runs/olillin/chalmers-search-exam/main?style=flat-square&label=build)
-![NPM Version](https://img.shields.io/npm/v/chalmers-search-exam?style=flat-square&logo=npm)
+[![GitHub test status](https://img.shields.io/github/check-runs/olillin/chalmers-search-exam/main?style=flat-square&label=build)](https://github.com/olillin/chalmers-search-exam/actions?query=branch%3Amain)
+[![NPM Version](https://img.shields.io/npm/v/chalmers-search-exam?style=flat-square&logo=npm)](https://npmjs.com/package/chalmers-search-exam)
 
 Library and CLI to search for your exam at Chalmers.
 
