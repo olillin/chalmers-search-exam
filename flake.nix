@@ -17,19 +17,9 @@
       default = pkgs.buildNpmPackage {
         name = "chalmers-search-exam";
 
-        # buildInputs = with pkgs; [
-        #   nodejs_latest
-        # ];
-
         src = self;
 
-        npmDepsHash = "sha256-ljgwbJFNPANpyOEnZWv8aUggIu/di/v00ZHK+Mv/HYI=";
-
-        # npmDeps = pkgs.importNpmLock {
-        #   npmRoot = self;
-        # };
-
-        # npmConfigHook = pkgs.importNpmLock.npmConfigHook;
+        npmDepsHash = "sha256-OP7PCyPXniNDC2T9Bac+651r6eMYinNrizY4lfoIoPg=";
 
         npmBuildScript = "build";
 
