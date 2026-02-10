@@ -19,13 +19,13 @@ interface RawExam {
     /** The location of the exam, usually which Campus. */
     examsLoc: ExamLocation
     /** Start date for registering for the exam. */
-    exDateRegStart: string
+    exDateRegStart: string | null
     /** End date for registering for the exam. */
-    exDateLastReg: string
+    exDateLastReg: string | null
     /** Date for the exam. */
-    exDate: string
-    /** Start time for the exam as HH:MM. */
-    starts: string
+    exDate: string | null
+    /** Start time for the exam as HH:MM or an empty string. */
+    starts: '' | ({} & string)
     /** Duration of the exam in hours. */
     exLenght: number
     /** Exam course code. */
@@ -116,9 +116,36 @@ const ONE_HOUR_MS = 60 * 60 * 1000
  * @returns The parsed exam.
  */
 function parseExam(exam: RawExam): Exam {
-    const start = parseDateSweden(exam.exDate, exam.starts)
-    const durationMs = exam.exLenght * ONE_HOUR_MS
-    const end = new Date(start.getTime() + durationMs)
+    console.log(exam)
+
+    // Parse exam start, end and duration
+    let examTimes: { start: Date; end: Date; duration: number } | {} = {}
+    if (exam.exDate !== null && exam.starts !== '') {
+        const start = parseDateSweden(exam.exDate, exam.starts)
+        const durationMs = exam.exLenght * ONE_HOUR_MS
+        const end = new Date(start.getTime() + durationMs)
+        examTimes = {
+            start: start,
+            end: end,
+            duration: exam.exLenght,
+        }
+    }
+
+    // Parse registration start
+    let registrationStart: { registrationStart: Date } | {} = {}
+    if (exam.exDateRegStart !== null) {
+        const date = parseDateSweden(exam.exDateRegStart)
+        registrationStart = { registrationStart: date }
+    }
+
+    // Parse registration end
+    let registrationEnd: { registrationEnd: Date } | {} = {}
+    if (exam.exDateLastReg !== null) {
+        const date = parseDateSweden(exam.exDateLastReg)
+        registrationEnd = { registrationEnd: date }
+    }
+
+    // Parse exam registration start and end
 
     return {
         id: exam.examId,
@@ -126,14 +153,8 @@ function parseExam(exam: RawExam): Exam {
         part: exam.part,
 
         location: exam.examsLoc,
-        start: start,
-        end: end,
-        duration: exam.exLenght,
         isDigital: !!exam.digitalDecided,
         isCancelled: exam.isCancelled,
-
-        registrationStart: parseDateSweden(exam.exDateRegStart),
-        registrationEnd: parseDateSweden(exam.exDateLastReg),
 
         courseCode: exam.code,
         courseId: exam.courseId,
@@ -144,6 +165,10 @@ function parseExam(exam: RawExam): Exam {
         inst: exam.inst,
         cmCode: exam.cmCode,
         ordinal: exam.ordinal,
+
+        ...examTimes,
+        ...registrationStart,
+        ...registrationEnd,
     }
 }
 
