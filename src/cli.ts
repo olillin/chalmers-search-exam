@@ -58,10 +58,25 @@ function getCourseUrl(courseCode: string): string {
  * @param exam The exam to print.
  */
 function printExam(exam: Exam) {
-    const start = formatDateAndTime(exam.start)
-    const registrationStart = formatDate(exam.registrationStart)
-    const registrationEnd = formatDate(exam.registrationEnd)
     const url = getCourseUrl(exam.courseCode)
+    const start = exam.start ? formatDateAndTime(exam.start) : 'Unknown'
+    const duration =
+        exam.duration !== undefined ? `${exam.duration} hours` : 'Unknown'
+
+    const registrationStart = exam.registrationStart
+        ? formatDate(exam.registrationStart)
+        : null
+    const registrationEnd = exam.registrationEnd
+        ? formatDate(exam.registrationEnd)
+        : null
+    const registration =
+        registrationStart !== null && registrationEnd !== null
+            ? `${registrationStart} → ${registrationEnd}`
+            : registrationStart === null && registrationEnd === null
+              ? 'Unknown'
+              : registrationStart !== null
+                ? `From ${registrationStart}`
+                : `Until ${registrationEnd}`
 
     const label = chalk.gray
 
@@ -70,12 +85,9 @@ function printExam(exam: Exam) {
             chalk.gray(` Modul: ${exam.cmCode}`)
     )
     console.log(label('Start:    ') + chalk.green(start))
-    console.log(label('Duration: ') + chalk.magenta(`${exam.duration} hours`))
+    console.log(label('Duration: ') + chalk.magenta(duration))
     console.log(label('Location: ') + chalk.blue(exam.location))
-    console.log(
-        label('Register: ') +
-            chalk.yellow(`${registrationStart} → ${registrationEnd}`)
-    )
+    console.log(label('Register: ') + chalk.yellow(registration))
 }
 
 void (async function main() {
