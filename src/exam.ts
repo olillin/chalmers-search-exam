@@ -9,20 +9,20 @@ export interface Exam {
     /** The location of the exam, usually which Campus. */
     location: ExamLocation
     /** Start date and time for the exam. */
-    start: Date
+    start?: Date
     /** End date and time for the exam. */
-    end: Date
+    end?: Date
     /** Duration of the exam in hours. */
-    duration: number
+    duration?: number
     /** If the exam will be digital. */
     isDigital: boolean
     /** If the exam is cancelled. */
     isCancelled: boolean
 
     /** Start date for registering for the exam. */
-    registrationStart: Date
+    registrationStart?: Date
     /** End date for registering for the exam. */
-    registrationEnd: Date
+    registrationEnd?: Date
 
     /** Course code the exam is for. */
     courseCode: string

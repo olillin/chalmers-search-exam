@@ -1,79 +1,87 @@
-import { Exam, ExamDateChange, ExamLocation } from './exam'
+import { Exam, ExamDateChange } from './exam'
+import * as z from 'zod'
 
-interface ExamSearchResponse {
-    info: {
-        /** How many items are in results. */
-        count: number
-        endCursor: number
-        suggest: unknown
-    }
-    results: RawExam[]
-}
-
-interface RawExam {
-    __typename: 'PewExamdates'
-    /** The course name. */
-    name: string
-    /** When this exam was last updated. */
-    updated: string
-    /** The location of the exam, usually which Campus. */
-    examsLoc: ExamLocation
-    /** Start date for registering for the exam. */
-    exDateRegStart: string
-    /** End date for registering for the exam. */
-    exDateLastReg: string
-    /** Date for the exam. */
-    exDate: string
-    /** Start time for the exam as HH:MM. */
-    starts: string
-    /** Duration of the exam in hours. */
-    exLenght: number
-    /** Exam course code. */
-    code: string
-    /** If the exam is cancelled. */
-    isCancelled: boolean
-    /** The numeric identifier for the course. */
-    courseId: number
-    /** A list of date changes for this exam. */
-    pewExamDateChanges: RawExamDateChange[]
-    /** The identifier for the exam. */
-    examId: string
-    inst: number
-    cmCode: string
-    /** Which part of the exam this is, if there are multiple. */
-    part: '' | (string & {})
-    ordinal: number
-    /** If the exam will be digital. */
-    digitalDecided: number
-}
-
-interface RawExamDateChange {
-    __typename: 'PewExamdatesPewExamDateChange'
-    changeCode: 'EX_DATE'
+const RawExamDateChange = z.object({
+    __typename: z.literal('PewExamdatesPewExamDateChange'),
+    changeCode: z.literal('EX_DATE'),
     /** The numeric identifier for this change. */
-    changeId: number
+    changeId: z.int().positive(),
     /** Date for the exam before the change. */
-    oldValue: string
+    oldValue: z.iso.date(),
     /** Date for the exam after the change. */
-    newValue: string
+    newValue: z.iso.date(),
     /** When this change was made. */
-    decisionDate: string
-    pressInfo: string
-    signedBy: string
-}
+    decisionDate: z.iso.datetime(),
+    pressInfo: z.string(),
+    signedBy: z.string(),
+})
+
+const RawExam = z.object({
+    __typename: 'PewExamdates',
+    /** The course name. */
+    name: z.string(),
+    /** When this exam was last updated. */
+    updated: z.iso.datetime({ offset: true }),
+    /** The location of the exam, usually which Campus. */
+    examsLoc: z.string(),
+    /** Start date for registering for the exam. */
+    exDateRegStart: z.iso.datetime().nullable(),
+    /** End date for registering for the exam. */
+    exDateLastReg: z.iso.datetime().nullable(),
+    /** Date for the exam. */
+    exDate: z.iso.datetime().nullable(),
+    /** Start time for the exam in ISO time format or an empty string. */
+    starts: z.iso.time().or(z.literal('')),
+    /** Duration of the exam in hours. */
+    exLenght: z.number().positive(),
+    /** Exam course code. */
+    code: z.string(),
+    /** If the exam is cancelled. */
+    isCancelled: z.boolean(),
+    /** The numeric identifier for the course. */
+    courseId: z.int().positive(),
+    /** A list of date changes for this exam. */
+    pewExamDateChanges: z.array(RawExamDateChange),
+    /** The identifier for the exam. */
+    examId: z.string(),
+    inst: z.int().positive(),
+    cmCode: z.string(),
+    /** Which part of the exam this is, if there are multiple. */
+    part: z.string().or(z.literal('')),
+    ordinal: z.int().positive(),
+    /** If the exam will be digital. */
+    digitalDecided: z.int().positive(),
+})
+
+const ExamSearchResponse = z.object({
+    info: z.object({
+        /** How many items are in results. */
+        count: z.int().positive(),
+        endCursor: z.int().positive(),
+        suggest: z.unknown(),
+    }),
+    results: z.array(RawExam),
+})
+
+type ExamSearchResponse = z.infer<typeof ExamSearchResponse>
+type RawExamDateChange = z.infer<typeof RawExamDateChange>
+type RawExam = z.infer<typeof RawExam>
 
 /**
  * Parse a date string with the Swedish time zone, optionally with a time of day.
  * @param date The date in ISO format.
- * @param time The time as HH:MM.
+ * @param time The time in ISO format.
  * @returns The date at the time provided.
  */
 function parseDateSweden(date: string, time?: string): Date {
     const dateSplit = date.split(/[T+]/g)
     const datePart = dateSplit[0]
-    const timePart =
-        time !== undefined ? time + ':00' : (dateSplit[1] ?? '00:00:00')
+    const timePart = time !== undefined ? time : (dateSplit[1] ?? '00:00')
     const iso = `${datePart}T${timePart}`
+
+    if (isNaN(new Date(iso).getTime())) {
+        return new Date('Invalid date')
+    }
 
     const swedenOffset =
         new Date(
@@ -116,9 +124,34 @@ const ONE_HOUR_MS = 60 * 60 * 1000
  * @returns The parsed exam.
  */
 function parseExam(exam: RawExam): Exam {
-    const start = parseDateSweden(exam.exDate, exam.starts)
-    const durationMs = exam.exLenght * ONE_HOUR_MS
-    const end = new Date(start.getTime() + durationMs)
+    // Parse exam start, end and duration
+    let examTimes: { start: Date; end: Date; duration: number } | null = null
+    if (exam.exDate !== null && exam.starts !== '') {
+        const start = parseDateSweden(exam.exDate, exam.starts)
+        const durationMs = exam.exLenght * ONE_HOUR_MS
+        const end = new Date(start.getTime() + durationMs)
+        examTimes = {
+            start: start,
+            end: end,
+            duration: exam.exLenght,
+        }
+    }
+
+    // Parse registration start
+    let registrationStart: { registrationStart: Date } | null = null
+    if (exam.exDateRegStart !== null) {
+        const date = parseDateSweden(exam.exDateRegStart)
+        registrationStart = { registrationStart: date }
+    }
+
+    // Parse registration end
+    let registrationEnd: { registrationEnd: Date } | null = null
+    if (exam.exDateLastReg !== null) {
+        const date = parseDateSweden(exam.exDateLastReg)
+        registrationEnd = { registrationEnd: date }
+    }
+
+    // Parse exam registration start and end
 
     return {
         id: exam.examId,
@@ -126,14 +159,8 @@ function parseExam(exam: RawExam): Exam {
         part: exam.part,
 
         location: exam.examsLoc,
-        start: start,
-        end: end,
-        duration: exam.exLenght,
         isDigital: !!exam.digitalDecided,
         isCancelled: exam.isCancelled,
-
-        registrationStart: parseDateSweden(exam.exDateRegStart),
-        registrationEnd: parseDateSweden(exam.exDateLastReg),
 
         courseCode: exam.code,
         courseId: exam.courseId,
@@ -144,6 +171,10 @@ function parseExam(exam: RawExam): Exam {
         inst: exam.inst,
         cmCode: exam.cmCode,
         ordinal: exam.ordinal,
+
+        ...examTimes,
+        ...registrationStart,
+        ...registrationEnd,
     }
 }
 
@@ -202,8 +233,7 @@ export async function searchExam(query: string): Promise<Exam[]> {
         )
     }
 
-    const responseData: ExamSearchResponse =
-        (await response.json()) as ExamSearchResponse
+    const responseData = ExamSearchResponse.parse(await response.json())
 
     // Only include exact matches for the course code
     const exactMatches = responseData.results.filter(
