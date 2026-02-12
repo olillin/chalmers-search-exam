@@ -19,7 +19,7 @@
 
         src = self;
 
-        npmDepsHash = "sha256-OP7PCyPXniNDC2T9Bac+651r6eMYinNrizY4lfoIoPg=";
+        npmDepsHash = "sha256-l+ss4y+SB7hEm43YHHSvpKg6QQH4kE8jyeWMSqScGZI=";
 
         npmBuildScript = "build";
 
