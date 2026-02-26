@@ -101,7 +101,11 @@ void (async function main() {
     const exams = await searchExam(query).catch(reason => {
         if (reason instanceof ValidationError) {
             console.error(reason.toString())
-            console.error(chalk.red("Received invalid response from API, see details above"))
+            console.error(
+                chalk.red(
+                    'Received invalid response from API, see details above'
+                )
+            )
         } else {
             throw reason
         }

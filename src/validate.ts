@@ -1,7 +1,7 @@
 import * as z from 'zod'
 import util from 'util'
 
-const RawExamDateChange = z.object({
+export const RawExamDateChange = z.object({
     __typename: z.literal('PewExamdatesPewExamDateChange'),
     changeCode: z.literal('EX_DATE'),
     /** The numeric identifier for this change. */
@@ -16,7 +16,7 @@ const RawExamDateChange = z.object({
     signedBy: z.string(),
 })
 
-const RawExam = z.object({
+export const RawExam = z.object({
     __typename: z.literal('PewExamdates'),
     /** The course name. */
     name: z.string(),
@@ -53,7 +53,7 @@ const RawExam = z.object({
     digitalDecided: z.int().nonnegative(),
 })
 
-const ExamSearchResponse = z.object({
+export const ExamSearchResponse = z.object({
     info: z.object({
         /** How many items are in results. */
         count: z.int().nonnegative(),
@@ -92,7 +92,6 @@ export class ValidationError extends Error {
         }
     }
 
-
     override toString(): string {
         return util.inspect(this.toJson(), {
             depth: 5,
@@ -104,7 +103,12 @@ export class ValidationError extends Error {
     }
 }
 
-function getValidationIssues(error: z.ZodError): ValidationIssue[] {
+/**
+ * Get shorter validation issues from a Zod error.
+ * @param error The error to get issues from.
+ * @returns A list of validation issues.
+ */
+export function getValidationIssues(error: z.ZodError): ValidationIssue[] {
     return error.issues.map(issue => ({
         code: issue.code,
         path: issue.path.join('.'),
@@ -112,7 +116,13 @@ function getValidationIssues(error: z.ZodError): ValidationIssue[] {
     }))
 }
 
-export function validateSearchResponse(data: unknown): ExamSearchResponse {
+/**
+ * Parse unknown data as an exam search response.
+ * @param data The unknown data to parse.
+ * @returns The parsed exam search response.
+ * @throws {ValidationError} If the data is not a valid exam search response.
+ */
+export function parseExamSearchResponse(data: unknown): ExamSearchResponse {
     try {
         return ExamSearchResponse.parse(data)
     } catch (error) {

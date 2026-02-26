@@ -3,7 +3,7 @@ import {
     ExamSearchResponse,
     RawExam,
     RawExamDateChange,
-    validateSearchResponse,
+    parseExamSearchResponse,
 } from './validate'
 
 /**
@@ -172,8 +172,8 @@ export async function searchExam(query: string): Promise<Exam[]> {
         )
     }
 
-    const rawData = await response.json()
-    const responseData = validateSearchResponse(rawData)
+    const rawData: unknown = await response.json()
+    const responseData = parseExamSearchResponse(rawData)
 
     // Only include exact matches for the course code
     const exactMatches = responseData.results.filter(
