@@ -1,6 +1,6 @@
 {
     "name": "chalmers-search-exam",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "description": "Search exam dates at Chalmers",
     "files": [
         "/lib",
