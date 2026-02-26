@@ -1,71 +1,10 @@
 import { Exam, ExamDateChange } from './exam'
-import * as z from 'zod'
-
-const RawExamDateChange = z.object({
-    __typename: z.literal('PewExamdatesPewExamDateChange'),
-    changeCode: z.literal('EX_DATE'),
-    /** The numeric identifier for this change. */
-    changeId: z.int().positive(),
-    /** Date for the exam before the change. */
-    oldValue: z.iso.date(),
-    /** Date for the exam after the change. */
-    newValue: z.iso.date(),
-    /** When this change was made. */
-    decisionDate: z.iso.datetime(),
-    pressInfo: z.string(),
-    signedBy: z.string(),
-})
-
-const RawExam = z.object({
-    __typename: 'PewExamdates',
-    /** The course name. */
-    name: z.string(),
-    /** When this exam was last updated. */
-    updated: z.iso.datetime({ offset: true }),
-    /** The location of the exam, usually which Campus. */
-    examsLoc: z.string(),
-    /** Start date for registering for the exam. */
-    exDateRegStart: z.iso.datetime().nullable(),
-    /** End date for registering for the exam. */
-    exDateLastReg: z.iso.datetime().nullable(),
-    /** Date for the exam. */
-    exDate: z.iso.datetime().nullable(),
-    /** Start time for the exam in ISO time format or an empty string. */
-    starts: z.iso.time().or(z.literal('')),
-    /** Duration of the exam in hours. */
-    exLenght: z.number().positive(),
-    /** Exam course code. */
-    code: z.string(),
-    /** If the exam is cancelled. */
-    isCancelled: z.boolean(),
-    /** The numeric identifier for the course. */
-    courseId: z.int().positive(),
-    /** A list of date changes for this exam. */
-    pewExamDateChanges: z.array(RawExamDateChange),
-    /** The identifier for the exam. */
-    examId: z.string(),
-    inst: z.int().positive(),
-    cmCode: z.string(),
-    /** Which part of the exam this is, if there are multiple. */
-    part: z.string().or(z.literal('')),
-    ordinal: z.int().positive(),
-    /** If the exam will be digital. */
-    digitalDecided: z.int().positive(),
-})
-
-const ExamSearchResponse = z.object({
-    info: z.object({
-        /** How many items are in results. */
-        count: z.int().positive(),
-        endCursor: z.int().positive(),
-        suggest: z.unknown(),
-    }),
-    results: z.array(RawExam),
-})
-
-type ExamSearchResponse = z.infer<typeof ExamSearchResponse>
-type RawExamDateChange = z.infer<typeof RawExamDateChange>
-type RawExam = z.infer<typeof RawExam>
+import {
+    ExamSearchResponse,
+    RawExam,
+    RawExamDateChange,
+    validateSearchResponse,
+} from './validate'
 
 /**
  * Parse a date string with the Swedish time zone, optionally with a time of day.
@@ -233,7 +172,8 @@ export async function searchExam(query: string): Promise<Exam[]> {
         )
     }
 
-    const responseData = ExamSearchResponse.parse(await response.json())
+    const rawData = await response.json()
+    const responseData = validateSearchResponse(rawData)
 
     // Only include exact matches for the course code
     const exactMatches = responseData.results.filter(

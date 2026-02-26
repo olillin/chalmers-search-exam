@@ -2,6 +2,7 @@
 
 import { Exam, searchExam } from '.'
 import chalk from 'chalk'
+import { ValidationError } from './validate'
 
 /**
  * Format a date using the locale including both the date and time.
@@ -97,8 +98,18 @@ void (async function main() {
         process.exit(1)
     }
 
-    const exams = await searchExam(query)
-    if (exams.length === 0) {
+    const exams = await searchExam(query).catch(reason => {
+        if (reason instanceof ValidationError) {
+            console.error(reason.toString())
+            console.error(chalk.red("Received invalid response from API, see details above"))
+        } else {
+            throw reason
+        }
+        return null
+    })
+    if (exams == null) {
+        process.exit(0)
+    } else if (exams.length === 0) {
         console.log(chalk.yellow('No exams found'))
         process.exit(0)
     }
