@@ -79,7 +79,12 @@ export class ValidationError extends Error {
     data: unknown
     context: unknown
 
-    constructor(message: string, issues: ValidationIssue[], data: unknown, context?: unknown) {
+    constructor(
+        message: string,
+        issues: ValidationIssue[],
+        data: unknown,
+        context?: unknown
+    ) {
         super(message)
         this.issues = issues
         this.data = data
@@ -92,7 +97,9 @@ export class ValidationError extends Error {
             message: this.message,
             issues: this.issues,
             data: this.data,
-            ...(this.context != undefined ? { context: this.context } : undefined)
+            ...(this.context != undefined
+                ? { context: this.context }
+                : undefined),
         }
     }
 
@@ -126,7 +133,10 @@ export function getValidationIssues(error: z.ZodError): ValidationIssue[] {
  * @returns The parsed exam search response.
  * @throws {ValidationError} If the data is not a valid exam search response.
  */
-export function parseExamSearchResponse(data: unknown, context?: unknown): ExamSearchResponse {
+export function parseExamSearchResponse(
+    data: unknown,
+    context?: unknown
+): ExamSearchResponse {
     try {
         return ExamSearchResponse.parse(data)
     } catch (error) {

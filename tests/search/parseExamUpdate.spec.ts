@@ -1,12 +1,12 @@
 import {
     exportedForTesting,
     type exportedTypesForTesting,
-    ExamDateChange,
+    ExamUpdate,
 } from '../../src'
-const { parseExamDateChange } = exportedForTesting
-type RawExamDateChange = exportedTypesForTesting['RawExamDateChange']
+const { parseExamUpdate } = exportedForTesting
+type RawExamUpdate = exportedTypesForTesting['RawExamUpdate']
 
-const rawExamDateChange: RawExamDateChange = {
+const rawExamDateChange: RawExamUpdate = {
     __typename: 'PewExamdatesPewExamDateChange',
     changeCode: 'EX_DATE',
     changeId: 25502,
@@ -18,11 +18,12 @@ const rawExamDateChange: RawExamDateChange = {
 }
 
 it('parses exam date changes correctly', () => {
-    const result = parseExamDateChange(rawExamDateChange)
-    const expected: ExamDateChange = {
-        changeId: 25502,
-        oldValue: new Date('2026-03-15T23:00:00.000Z'),
-        newValue: new Date('2026-03-19T23:00:00.000Z'),
+    const result = parseExamUpdate(rawExamDateChange)
+    const expected: ExamUpdate = {
+        id: 25502,
+        updateType: 'EX_DATE',
+        oldValue: '2026-03-16',
+        newValue: '2026-03-20',
         decisionDate: new Date('2025-12-03T23:00:00.000Z'),
         pressInfo: '[2026-03-16 4,5 hp, 0217]',
         signedBy: 'Examinator',

@@ -41,7 +41,7 @@ function parseDateSweden(date: string, time?: string): Date {
 
 /**
  * Parse an exam update from the API.
- * @param change The raw JSON exam update from the API.
+ * @param update The raw JSON exam update from the API.
  * @returns The parsed exam update.
  */
 function parseExamUpdate(update: RawExamUpdate): ExamUpdate {
@@ -174,7 +174,9 @@ export async function searchExam(query: string): Promise<Exam[]> {
     }
 
     const rawData: unknown = await response.json()
-    const responseData = parseExamSearchResponse(rawData, { url: url.toString() })
+    const responseData = parseExamSearchResponse(rawData, {
+        url: url.toString(),
+    })
 
     // Only include exact matches for the course code
     const exactMatches = responseData.results.filter(

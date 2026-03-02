@@ -46,7 +46,7 @@ export interface ExamUpdate {
     /** The numeric identifier for this update. */
     id: number
     /** A code identifying what was changed. */
-    updateType: ExamUpdateType,
+    updateType: ExamUpdateType
     /** Value before the change. */
     oldValue: unknown
     /** Value after the change. */
