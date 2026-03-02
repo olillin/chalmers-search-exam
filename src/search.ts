@@ -1,8 +1,8 @@
-import { Exam, ExamDateChange } from './exam'
+import { Exam, ExamUpdate } from './exam'
 import {
     ExamSearchResponse,
     RawExam,
-    RawExamDateChange,
+    RawExamUpdate,
     parseExamSearchResponse,
 } from './validate'
 
@@ -40,18 +40,19 @@ function parseDateSweden(date: string, time?: string): Date {
 }
 
 /**
- * Parse an exam date change from the API.
- * @param change The raw JSON exam date change from the API.
- * @returns The parsed exam date change.
+ * Parse an exam update from the API.
+ * @param change The raw JSON exam update from the API.
+ * @returns The parsed exam update.
  */
-function parseExamDateChange(change: RawExamDateChange): ExamDateChange {
+function parseExamUpdate(update: RawExamUpdate): ExamUpdate {
     return {
-        changeId: change.changeId,
-        oldValue: parseDateSweden(change.oldValue),
-        newValue: parseDateSweden(change.newValue),
-        decisionDate: parseDateSweden(change.decisionDate),
-        pressInfo: change.pressInfo,
-        signedBy: change.signedBy,
+        id: update.changeId,
+        updateType: update.changeCode,
+        oldValue: update.oldValue,
+        newValue: update.newValue,
+        decisionDate: parseDateSweden(update.decisionDate),
+        pressInfo: update.pressInfo,
+        signedBy: update.signedBy,
     }
 }
 
@@ -105,7 +106,7 @@ function parseExam(exam: RawExam): Exam {
         courseId: exam.courseId,
 
         updated: parseDateSweden(exam.updated),
-        dateChanges: exam.pewExamDateChanges.map(parseExamDateChange),
+        updates: exam.pewExamDateChanges.map(parseExamUpdate),
 
         inst: exam.inst,
         cmCode: exam.cmCode,
@@ -173,7 +174,7 @@ export async function searchExam(query: string): Promise<Exam[]> {
     }
 
     const rawData: unknown = await response.json()
-    const responseData = parseExamSearchResponse(rawData)
+    const responseData = parseExamSearchResponse(rawData, { url: url.toString() })
 
     // Only include exact matches for the course code
     const exactMatches = responseData.results.filter(
@@ -187,11 +188,11 @@ export async function searchExam(query: string): Promise<Exam[]> {
 
 export const exportedForTesting = {
     parseExam,
-    parseExamDateChange,
+    parseExamUpdate,
     parseDateSweden,
 }
 export type exportedTypesForTesting = {
     ExamSearchResponse: ExamSearchResponse
     RawExam: RawExam
-    RawExamDateChange: RawExamDateChange
+    RawExamUpdate: RawExamUpdate
 }

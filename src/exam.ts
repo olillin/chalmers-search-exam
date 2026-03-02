@@ -31,8 +31,8 @@ export interface Exam {
 
     /** When this exam was last updated. */
     updated: Date
-    /** A list of date changes for this exam. */
-    dateChanges: ExamDateChange[]
+    /** A list of updates for this exam. */
+    updates: ExamUpdate[]
 
     inst: number
     cmCode: string
@@ -40,15 +40,18 @@ export interface Exam {
 }
 
 export type ExamLocation = 'Johanneberg' | 'Lindholmen' | (string & {})
+export type ExamUpdateType = 'EX_DATE' | 'EX_TIME' | 'DIGITAL' | (string & {})
 
-export interface ExamDateChange {
-    /** The numeric identifier for this change. */
-    changeId: number
-    /** Date for the exam before the change. */
-    oldValue: Date
-    /** Date for the exam after the change. */
-    newValue: Date
-    /** When this change was made. */
+export interface ExamUpdate {
+    /** The numeric identifier for this update. */
+    id: number
+    /** A code identifying what was changed. */
+    updateType: ExamUpdateType,
+    /** Value before the change. */
+    oldValue: unknown
+    /** Value after the change. */
+    newValue: unknown
+    /** When this update was made. */
     decisionDate: Date
     pressInfo: string
     signedBy: string

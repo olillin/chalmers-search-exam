@@ -1,15 +1,16 @@
 import * as z from 'zod'
 import util from 'util'
 
-export const RawExamDateChange = z.object({
+export const RawExamUpdate = z.object({
     __typename: z.literal('PewExamdatesPewExamDateChange'),
-    changeCode: z.literal('EX_DATE'),
+    /** A code identifying what was changed. */
+    changeCode: z.string(),
     /** The numeric identifier for this change. */
     changeId: z.int().nonnegative(),
-    /** Date for the exam before the change. */
-    oldValue: z.iso.date(),
-    /** Date for the exam after the change. */
-    newValue: z.iso.date(),
+    /** Value before the change. */
+    oldValue: z.unknown(),
+    /** Value after the change. */
+    newValue: z.unknown(),
     /** When this change was made. */
     decisionDate: z.iso.datetime({ local: true }),
     pressInfo: z.string(),
@@ -41,7 +42,7 @@ export const RawExam = z.object({
     /** The numeric identifier for the course. */
     courseId: z.int().nonnegative(),
     /** A list of date changes for this exam. */
-    pewExamDateChanges: z.array(RawExamDateChange),
+    pewExamDateChanges: z.array(RawExamUpdate),
     /** The identifier for the exam. */
     examId: z.string(),
     inst: z.int().nonnegative(),
@@ -64,7 +65,7 @@ export const ExamSearchResponse = z.object({
 })
 
 export type ExamSearchResponse = z.infer<typeof ExamSearchResponse>
-export type RawExamDateChange = z.infer<typeof RawExamDateChange>
+export type RawExamUpdate = z.infer<typeof RawExamUpdate>
 export type RawExam = z.infer<typeof RawExam>
 
 export interface ValidationIssue {
@@ -76,11 +77,13 @@ export interface ValidationIssue {
 export class ValidationError extends Error {
     issues: ValidationIssue[]
     data: unknown
+    context: unknown
 
-    constructor(message: string, issues: ValidationIssue[], data: unknown) {
+    constructor(message: string, issues: ValidationIssue[], data: unknown, context?: unknown) {
         super(message)
         this.issues = issues
         this.data = data
+        this.context = context
     }
 
     toJson() {
@@ -89,6 +92,7 @@ export class ValidationError extends Error {
             message: this.message,
             issues: this.issues,
             data: this.data,
+            ...(this.context != undefined ? { context: this.context } : undefined)
         }
     }
 
@@ -96,7 +100,6 @@ export class ValidationError extends Error {
         return util.inspect(this.toJson(), {
             depth: 5,
             maxArrayLength: 5,
-            maxStringLength: 200,
             breakLength: 100,
             colors: true,
         })
@@ -119,10 +122,11 @@ export function getValidationIssues(error: z.ZodError): ValidationIssue[] {
 /**
  * Parse unknown data as an exam search response.
  * @param data The unknown data to parse.
+ * @param context Extra context to include if an error occurs.
  * @returns The parsed exam search response.
  * @throws {ValidationError} If the data is not a valid exam search response.
  */
-export function parseExamSearchResponse(data: unknown): ExamSearchResponse {
+export function parseExamSearchResponse(data: unknown, context?: unknown): ExamSearchResponse {
     try {
         return ExamSearchResponse.parse(data)
     } catch (error) {
@@ -131,7 +135,8 @@ export function parseExamSearchResponse(data: unknown): ExamSearchResponse {
             throw new ValidationError(
                 'Failed to validate search response',
                 issues,
-                data
+                data,
+                context
             )
         } else throw error
     }
