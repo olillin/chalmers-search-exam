@@ -1,8 +1,8 @@
-import { Exam, ExamDateChange } from './exam'
+import { Exam, ExamUpdate } from './exam'
 import {
     ExamSearchResponse,
     RawExam,
-    RawExamDateChange,
+    RawExamUpdate,
     parseExamSearchResponse,
 } from './validate'
 
@@ -40,18 +40,41 @@ function parseDateSweden(date: string, time?: string): Date {
 }
 
 /**
- * Parse an exam date change from the API.
- * @param change The raw JSON exam date change from the API.
- * @returns The parsed exam date change.
+ * Parse a value from an exam update and convert into an appropriate type.
+ * @param value The value to parse.
+ * @returns The parsed value as a date, number or string.
  */
-function parseExamDateChange(change: RawExamDateChange): ExamDateChange {
+function parseUpdateValue(value: string): string | Date | number {
+    // Try parse number
+    const num = Number(value)
+    if (!isNaN(num)) {
+        return num
+    }
+
+    // Try parse date
+    const date = parseDateSweden(value)
+    if (!isNaN(date.getTime())) {
+        return date
+    }
+
+    // Fallback as string
+    return value.toString()
+}
+
+/**
+ * Parse an exam update from the API.
+ * @param update The raw JSON exam update from the API.
+ * @returns The parsed exam update.
+ */
+function parseExamUpdate(update: RawExamUpdate): ExamUpdate {
     return {
-        changeId: change.changeId,
-        oldValue: parseDateSweden(change.oldValue),
-        newValue: parseDateSweden(change.newValue),
-        decisionDate: parseDateSweden(change.decisionDate),
-        pressInfo: change.pressInfo,
-        signedBy: change.signedBy,
+        id: update.changeId,
+        updateType: update.changeCode,
+        oldValue: parseUpdateValue(String(update.oldValue)),
+        newValue: parseUpdateValue(String(update.newValue)),
+        decisionDate: parseDateSweden(update.decisionDate),
+        pressInfo: update.pressInfo,
+        signedBy: update.signedBy,
     }
 }
 
@@ -105,7 +128,7 @@ function parseExam(exam: RawExam): Exam {
         courseId: exam.courseId,
 
         updated: parseDateSweden(exam.updated),
-        dateChanges: exam.pewExamDateChanges.map(parseExamDateChange),
+        updates: exam.pewExamDateChanges.map(parseExamUpdate),
 
         inst: exam.inst,
         cmCode: exam.cmCode,
@@ -173,7 +196,9 @@ export async function searchExam(query: string): Promise<Exam[]> {
     }
 
     const rawData: unknown = await response.json()
-    const responseData = parseExamSearchResponse(rawData)
+    const responseData = parseExamSearchResponse(rawData, {
+        url: url.toString(),
+    })
 
     // Only include exact matches for the course code
     const exactMatches = responseData.results.filter(
@@ -187,11 +212,12 @@ export async function searchExam(query: string): Promise<Exam[]> {
 
 export const exportedForTesting = {
     parseExam,
-    parseExamDateChange,
+    parseExamUpdate,
     parseDateSweden,
+    parseUpdateValue,
 }
 export type exportedTypesForTesting = {
     ExamSearchResponse: ExamSearchResponse
     RawExam: RawExam
-    RawExamDateChange: RawExamDateChange
+    RawExamUpdate: RawExamUpdate
 }

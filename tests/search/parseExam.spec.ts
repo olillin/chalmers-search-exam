@@ -1,9 +1,9 @@
 import { Exam, exportedForTesting, exportedTypesForTesting } from '../../src'
-const { parseExam, parseExamDateChange } = exportedForTesting
+const { parseExam, parseExamUpdate } = exportedForTesting
 type RawExam = exportedTypesForTesting['RawExam']
-type RawExamDateChange = exportedTypesForTesting['RawExamDateChange']
+type RawExamUpdate = exportedTypesForTesting['RawExamUpdate']
 
-const rawExamDateChange: RawExamDateChange = {
+const rawExamUpdate: RawExamUpdate = {
     __typename: 'PewExamdatesPewExamDateChange',
     changeCode: 'EX_DATE',
     changeId: 25502,
@@ -27,7 +27,7 @@ const rawExam: RawExam = {
     code: 'TDA553',
     isCancelled: false,
     courseId: 40337,
-    pewExamDateChanges: [rawExamDateChange],
+    pewExamDateChanges: [rawExamUpdate],
     examId: 'norm_63294',
     inst: 0,
     cmCode: '0122',
@@ -50,7 +50,7 @@ it('parses exams correctly', () => {
         courseCode: 'TDA553',
         isCancelled: false,
         courseId: 40337,
-        dateChanges: [parseExamDateChange(rawExamDateChange)],
+        updates: [parseExamUpdate(rawExamUpdate)],
         id: 'norm_63294',
         inst: 0,
         cmCode: '0122',
@@ -70,7 +70,7 @@ const expectedExamNoTime: Exam = {
     courseCode: 'TDA553',
     isCancelled: false,
     courseId: 40337,
-    dateChanges: [],
+    updates: [],
     id: 'norm_63294',
     inst: 0,
     cmCode: '0122',
@@ -164,7 +164,7 @@ it('omits registration start if null', () => {
         courseCode: 'TDA553',
         isCancelled: false,
         courseId: 40337,
-        dateChanges: [],
+        updates: [],
         id: 'norm_63294',
         inst: 0,
         cmCode: '0122',
@@ -209,7 +209,7 @@ it('omits registration end if null', () => {
         courseCode: 'TDA553',
         isCancelled: false,
         courseId: 40337,
-        dateChanges: [],
+        updates: [],
         id: 'norm_63294',
         inst: 0,
         cmCode: '0122',
@@ -255,7 +255,7 @@ it('correctly parses 0 hour long exams', () => {
         courseCode: 'TDA553',
         isCancelled: false,
         courseId: 40337,
-        dateChanges: [],
+        updates: [],
         id: 'norm_63294',
         inst: 0,
         cmCode: '0122',
@@ -301,7 +301,7 @@ it('correctly parses decimal hour long exams', () => {
         courseCode: 'TDA553',
         isCancelled: false,
         courseId: 40337,
-        dateChanges: [],
+        updates: [],
         id: 'norm_63294',
         inst: 0,
         cmCode: '0122',
