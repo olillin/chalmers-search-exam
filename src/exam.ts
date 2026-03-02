@@ -48,9 +48,9 @@ export interface ExamUpdate {
     /** A code identifying what was changed. */
     updateType: ExamUpdateType
     /** Value before the change. */
-    oldValue: unknown
+    oldValue: string | Date | number
     /** Value after the change. */
-    newValue: unknown
+    newValue: string | Date | number
     /** When this update was made. */
     decisionDate: Date
     pressInfo: string

@@ -40,6 +40,28 @@ function parseDateSweden(date: string, time?: string): Date {
 }
 
 /**
+ * Parse a value from an exam update and convert into an appropriate type.
+ * @param value The value to parse.
+ * @returns The parsed value as a date, number or string.
+ */
+function parseUpdateValue(value: string): string | Date | number {
+    // Try parse number
+    const num = Number(value)
+    if (!isNaN(num)) {
+        return num
+    }
+
+    // Try parse date
+    const date = parseDateSweden(value)
+    if (!isNaN(date.getTime())) {
+        return date
+    }
+
+    // Fallback as string
+    return value.toString()
+}
+
+/**
  * Parse an exam update from the API.
  * @param update The raw JSON exam update from the API.
  * @returns The parsed exam update.
@@ -48,8 +70,8 @@ function parseExamUpdate(update: RawExamUpdate): ExamUpdate {
     return {
         id: update.changeId,
         updateType: update.changeCode,
-        oldValue: update.oldValue,
-        newValue: update.newValue,
+        oldValue: parseUpdateValue(String(update.oldValue)),
+        newValue: parseUpdateValue(String(update.newValue)),
         decisionDate: parseDateSweden(update.decisionDate),
         pressInfo: update.pressInfo,
         signedBy: update.signedBy,
@@ -192,6 +214,7 @@ export const exportedForTesting = {
     parseExam,
     parseExamUpdate,
     parseDateSweden,
+    parseUpdateValue,
 }
 export type exportedTypesForTesting = {
     ExamSearchResponse: ExamSearchResponse
