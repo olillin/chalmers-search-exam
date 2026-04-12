@@ -187,7 +187,22 @@ export async function searchExam(
 ): Promise<Exam[]> {
     let url: URL
     if (typeof q === 'string') {
-        url = createSearchUrl(q)
+        const upperQuery = q.toUpperCase()
+        if (isCourseCode(upperQuery)) {
+            const filter: FilterOptions = {
+                _and: [
+                    defaultSearchFilter,
+                    {
+                        code: {
+                            _eq: upperQuery,
+                        },
+                    },
+                ],
+            }
+            url = createSearchUrl(q, filter)
+        } else {
+            url = createSearchUrl(q)
+        }
     } else {
         const filter: FilterOptions = {
             _and: [
@@ -232,6 +247,16 @@ export async function searchExam(
 
     const exams: Exam[] = rawExams.map(parseExam)
     return exams
+}
+
+/**
+ * Checks if a string is a course code.
+ * @param maybeCourseCode The string to check.
+ * @returns If the string is a course code.
+ */
+export function isCourseCode(maybeCourseCode: string): boolean {
+    const pattern = /^[A-Z]{3}[0-9]{3}(GU|_[0-9]{2}_[HV]T[0-9]{2}_[0-9]{5})?$/
+    return pattern.test(maybeCourseCode)
 }
 
 const defaultSearchFilter: FilterOptions = {

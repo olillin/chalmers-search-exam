@@ -1,0 +1,46 @@
+Agil programvaruprojektledning
+Agile software project management
+Autonoma robotar
+Avancerad avloppsreningsteknik
+Avancerad teori för programmeringsspråk
+Beräkningsmetoder för storskaliga data
+Bygglogistik och supply chain management i byggsektorn
+Byggnadsmaterial
+Databaser
+Datakommunikation
+Datornätkommunikation
+Datorsystemteknik
+Design och konstruktion av datorspel
+Design och konstruktion av grafiska gränssnitt
+Djup grundläggning
+Elektriska kretsar och fält
+Forskningsinriktad kurs inom data- och informationsteknik
+Fysik för ingenjörer
+Hydrologi och dagvatten
+Hållbar behandling av urbana vatten
+Hållbar byggnadsrenovering
+Industriell ekonomi
+Innemiljö och klimatsystem
+Introduktion till Data Science och AI
+Introduktion till data science och AI
+Introduktion till medicinteknik
+Kompilatorkonstruktion
+Konstruktionsteknik
+Linjär algebra
+Maskinorienterad programmering
+Matematikens domänspecifika språk
+Matematisk analys
+Människa - dator interaktion
+Nya teknologier, global risk och mänsklighetens framtid
+Nätverkssäkerhet
+Projektledning inom byggsektorn
+Språkbaserad datasäkerhet
+Språkbaserad säkerhet
+Systematisk datahantering
+Teknikens etik
+Tillämpad hydrogeologi
+Vägutformning och trafikanalys
+
+DAT
+DIT
+TDA
