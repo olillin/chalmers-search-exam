@@ -140,41 +140,173 @@ function parseExam(exam: RawExam): Exam {
     }
 }
 
+export type ExamSearchLanguage = 'sv' | 'en'
+export interface ExamSearchOptions {
+    /** The query which will be searched for. */
+    query?: string
+    /** The language for the search results, default is Swedish. */
+    language?: ExamSearchLanguage
+
+    /** Filter for exams which match all the set properties. */
+    filter: {
+        /** The identifier for the exam. */
+        courseCode?: string
+        /** Course code the exam is for. */
+        courseName?: string
+        /** The numeric identifier for the course. */
+        courseId?: number
+    }
+}
+
+type FilterOptions = {
+    _and?: FilterOptions[]
+    _or?: FilterOptions[]
+} & {
+    [key in keyof RawExam]?: {
+        _eq?: string
+        _gte?: string
+        _lte?: string
+    }
+}
+
 /**
  * Search for an exam using the Chalmers API.
- *
- * If the query is a course code only exact matches for that course code will
- * be returned.
- * @param query The search query, for example a course code.
+ * @param options The search options. Will filter exams for exact matches only.
+ * @returns The exams found with the search options.
+ */
+export async function searchExam(options: ExamSearchOptions): Promise<Exam[]>
+
+/**
+ * Search for an exam using the Chalmers API.
+ * @param query The search query, for example a course code or name.
  * @returns The exams found for the query.
  */
-export async function searchExam(query: string): Promise<Exam[]> {
-    const variables = {
-        filter: {
+export async function searchExam(query: string): Promise<Exam[]>
+export async function searchExam(
+    q: string | ExamSearchOptions
+): Promise<Exam[]> {
+    let url: URL
+    if (typeof q === 'string') {
+        const upperQuery = q.toUpperCase()
+        if (isCourseCode(upperQuery)) {
+            const filter: FilterOptions = {
+                _and: [
+                    defaultSearchFilter,
+                    {
+                        code: {
+                            _eq: upperQuery,
+                        },
+                    },
+                ],
+            }
+            url = createSearchUrl(q, filter)
+        } else {
+            url = createSearchUrl(q)
+        }
+    } else {
+        const filter: FilterOptions = {
             _and: [
-                {
-                    _or: [
-                        {
-                            exDate: {
-                                _gte: 'now/d',
-                            },
-                        },
-                        {
-                            inst: {
-                                _eq: '1',
-                            },
-                        },
-                    ],
-                },
-                {
-                    _or: [],
-                },
+                defaultSearchFilter,
+                q.filter.courseCode == null
+                    ? {}
+                    : {
+                          code: {
+                              _eq: q.filter.courseCode,
+                          },
+                      },
+                q.filter.courseName == null
+                    ? {}
+                    : {
+                          name: {
+                              _eq: q.filter.courseName,
+                          },
+                      },
+                q.filter.courseId == null
+                    ? {}
+                    : {
+                          courseId: {
+                              _eq: String(q.filter.courseId),
+                          },
+                      },
             ],
+        }
+        url = createSearchUrl(q.query, filter, q.language)
+    }
+
+    const response = await fetch(url)
+    if (!response.ok) {
+        throw new Error(
+            `Received error from API (code ${response.status}): ${await response.text()}`
+        )
+    }
+
+    const rawData: unknown = await response.json()
+    const rawExams: RawExam[] = parseExamSearchResponse(rawData, {
+        url: url.toString(),
+    }).results
+
+    const exams: Exam[] = rawExams.map(parseExam)
+    return exams
+}
+
+/**
+ * Checks if a string is a course code.
+ * @param maybeCourseCode The string to check.
+ * @returns If the string is a course code.
+ */
+export function isCourseCode(maybeCourseCode: string): boolean {
+    const pattern = /^[A-Z]{3}[0-9]{3}(GU|_[0-9]{2}_[HV]T[0-9]{2}_[0-9]{5})?$/
+    return pattern.test(maybeCourseCode)
+}
+
+const defaultSearchFilter: FilterOptions = {
+    _or: [
+        {
+            exDate: {
+                _gte: 'now/d',
+            },
         },
-        search: query,
+        {
+            inst: {
+                _eq: '1',
+            },
+        },
+    ],
+}
+
+interface SearchVariables {
+    search?: string
+    filter: FilterOptions
+    language: ExamSearchLanguage
+    sort: unknown[]
+    indexes: string
+    context: string
+    highlight: boolean
+    groupBy: string
+    url: string[]
+}
+
+/**
+ * Create the search variables for the Chalmers API with simpler options.
+ * @param query The search query, may be omitted.
+ * @param filter Options to filter exams by, will use a default filter if omitted.
+ * @param language The language for the search results, default is Swedish.
+ * @returns The constructed variables ready to be sent to the API.
+ */
+function createSearchVariables(
+    query: string | null | undefined,
+    filter?: FilterOptions | null,
+    language?: ExamSearchLanguage | null
+): SearchVariables {
+    if (filter == null) {
+        filter = defaultSearchFilter
+    }
+    return {
+        ...(query != null ? { search: query } : undefined),
+        filter,
+        language: language ?? 'sv',
         sort: [],
         indexes: 'PewExamdates',
-        language: 'sv',
         context: 'Tentamen',
         highlight: false,
         groupBy: 'collapse',
@@ -185,29 +317,24 @@ export async function searchExam(query: string): Promise<Exam[]> {
             'sok-tentamensdatum',
         ],
     }
-    const url = new URL('https://www.chalmers.se/api/list/')
+}
+
+/**
+ * Create the URL for the Chalmers API with simpler options.
+ * @param query The search query, may be omitted.
+ * @param filter Options to filter exams by, will use a default filter if omitted.
+ * @param language The language for the search results, default is Swedish.
+ * @returns The constructed URL ready to request the API.
+ */
+function createSearchUrl(
+    query: string | null | undefined,
+    filter?: FilterOptions | null,
+    language?: ExamSearchLanguage | null
+): URL {
+    const url = new URL('https://www.chalmers.se/api/list')
+    const variables = createSearchVariables(query, filter, language)
     url.searchParams.append('variables', JSON.stringify(variables))
-
-    const response = await fetch(url)
-    if (!response.ok) {
-        throw new Error(
-            `Received error from API (code ${response.status}): ${await response.text()}`
-        )
-    }
-
-    const rawData: unknown = await response.json()
-    const responseData = parseExamSearchResponse(rawData, {
-        url: url.toString(),
-    })
-
-    // Only include exact matches for the course code
-    const exactMatches = responseData.results.filter(
-        exam => exam.code.toUpperCase() === query.toUpperCase()
-    )
-    const rawExams =
-        exactMatches.length > 0 ? exactMatches : responseData.results
-
-    return rawExams.map(parseExam)
+    return url
 }
 
 export const exportedForTesting = {
@@ -215,9 +342,13 @@ export const exportedForTesting = {
     parseExamUpdate,
     parseDateSweden,
     parseUpdateValue,
+    createSearchVariables,
+    createSearchUrl,
 }
 export type exportedTypesForTesting = {
     ExamSearchResponse: ExamSearchResponse
     RawExam: RawExam
     RawExamUpdate: RawExamUpdate
+    FilterOptions: FilterOptions
+    SearchVariables: SearchVariables
 }
